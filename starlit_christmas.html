@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>星愿 · Starlit Christmas</title>
+  <style>
+    /* ==========================================================================
+       Base Reset & Luxury Velvet Night Theme Variables
+       ========================================================================== */
+    :root {
+      --bg-deep: #050508;
+      --bg-mid: #0b0912;
+      --text-primary: #f6eaec;
+      --text-secondary: rgba(240, 226, 229, 0.72);
+      --text-muted: rgba(226, 212, 216, 0.45);
+      --pill-bg: rgba(15, 14, 22, 0.76);
+      --pill-border: rgba(255, 255, 255, 0.09);
+      --active-pill: #e4c5c8;
+      --active-pill-text: #181316;
+      --accent-glow: rgba(235, 196, 202, 0.35);
+      --font-serif-en: 'Playfair Display', 'Didot', 'Bodoni MT', 'Georgia', 'Times New Roman', serif;
+      --font-serif-cn: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', 'Georgia', serif;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+    }
+
+    /* Fullscreen 3D Canvas */
+    #scene {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #scene:active {
+      cursor: grabbing;
+    }
+
+    /* ==========================================================================
+       Top Minimal Header & Controls
+       ========================================================================== */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: max(18px, env(safe-area-inset-top, 18px)) 20px 12px;
+      pointer-events: none;
+    }
+
+    .brand-header {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-width: 62%;
+    }
+
+    .brand-title {
+      font-family: var(--font-serif-cn);
+      font-size: clamp(11px, 2.6vw, 13px);
+      font-weight: 500;
+      letter-spacing: 0.24em;
+      color: rgba(242, 228, 231, 0.85);
+      text-transform: uppercase;
+      text-shadow: 0 0 14px rgba(255, 225, 230, 0.25);
+    }
+
+    .brand-subtitle {
+      font-family: var(--font-serif-cn);
+      font-size: clamp(10px, 2.2vw, 11.5px);
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .glass-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(16, 15, 24, 0.68);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: rgba(242, 232, 235, 0.86);
+      font-family: var(--font-serif-cn);
+      font-size: 11.5px;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    }
+
+    .glass-chip:hover {
+      background: rgba(28, 26, 40, 0.85);
+      border-color: rgba(255, 255, 255, 0.22);
+      transform: translateY(-1px);
+    }
+
+    .glass-chip:active {
+      transform: scale(0.96);
+    }
+
+    .glass-chip.is-active {
+      background: rgba(226, 200, 205, 0.2);
+      border-color: rgba(235, 206, 212, 0.45);
+      color: #fff5f7;
+      box-shadow: 0 0 18px rgba(226, 196, 204, 0.22);
+    }
+
+    .chip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.32);
+      transition: all 0.28s ease;
+    }
+
+    .glass-chip.is-active .chip-dot {
+      background: #bce8ff;
+      box-shadow: 0 0 8px #bce8ff;
+    }
+
+    /* ==========================================================================
+       Bottom Blessing Typography & Mode Switcher Bar
+       ========================================================================== */
+    .bottom-stage {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 16px max(18px, env(safe-area-inset-bottom, 18px));
+      pointer-events: none;
+    }
+
+    .blessing-block {
+      text-align: center;
+      margin-bottom: clamp(14px, 2.6vh, 22px);
+      pointer-events: auto;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .blessing-block:hover {
+      transform: translateY(-1px);
+    }
+
+    .blessing-main {
+      font-family: var(--font-serif-en);
+      font-style: italic;
+      font-weight: 500;
+      font-size: clamp(30px, 7.2vw, 46px);
+      line-height: 1.12;
+      letter-spacing: 0.02em;
+      color: #f6e7e9;
+      text-shadow:
+        0 0 22px rgba(244, 210, 216, 0.36),
+        0 2px 10px rgba(0, 0, 0, 0.65);
+      transition: color 0.6s ease, text-shadow 0.6s ease;
+    }
+
+    .blessing-cn {
+      margin-top: 6px;
+      font-family: var(--font-serif-cn);
+      font-size: clamp(13px, 3.2vw, 15.5px);
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      color: rgba(240, 226, 229, 0.84);
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+    }
+
+    .blessing-sub {
+      margin-top: 7px;
+      font-family: var(--font-serif-en);
+      font-size: clamp(9px, 2vw, 10.5px);
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: rgba(226, 210, 214, 0.48);
+    }
+
+    /* Bottom Dark Glass Pill Bar */
+    .mode-switcher {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      width: 100%;
+      max-width: 410px;
+      padding: 6px;
+      border-radius: 18px;
+      background: var(--pill-bg);
+      border: 1px solid var(--pill-border);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow:
+        0 12px 36px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      pointer-events: auto;
+    }
+
+    .mode-btn {
+      position: relative;
+      z-index: 2;
+      border: 1px solid transparent;
+      border-radius: 13px;
+      padding: 11px 8px;
+      background: rgba(255, 255, 255, 0.025);
+      color: rgba(235, 222, 225, 0.72);
+      font-family: var(--font-serif-cn);
+      font-size: clamp(12px, 3vw, 13.5px);
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+      white-space: nowrap;
+    }
+
+    .mode-btn:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff4f6;
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .mode-btn.active {
+      background: var(--active-pill);
+      color: var(--active-pill-text);
+      font-weight: 600;
+      box-shadow:
+        0 4px 16px rgba(228, 197, 200, 0.32),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    }
+
+    /* Theme-adaptive active pill tints */
+    body[data-theme="snow"] .mode-btn.active {
+      background: #d8ecf8;
+      color: #101b24;
+      box-shadow:
+        0 4px 18px rgba(186, 226, 248, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    body[data-theme="rose"] .mode-btn.active {
+      background: #ecc3ce;
+      color: #211218;
+      box-shadow:
+        0 4px 18px rgba(236, 180, 198, 0.36),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    /* ==========================================================================
+       Custom Blessing Modal (Replaces prompt/alert cleanly)
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(4, 4, 8, 0.72);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 370px;
+      padding: 22px 20px 18px;
+      border-radius: 20px;
+      background: rgba(18, 16, 26, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
+      transform: translateY(10px) scale(0.97);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .modal-backdrop.open .modal-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-title {
+      font-family: var(--font-serif-cn);
+      font-size: 15px;
+      letter-spacing: 0.14em;
+      color: #f6e7e9;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .field-group {
+      margin-bottom: 12px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(8, 8, 14, 0.75);
+      color: #fff6f7;
+      font-family: var(--font-serif-cn);
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.2s ease;
+      user-select: text;
+    }
+
+    .field-input:focus {
+      border-color: rgba(235, 198, 205, 0.55);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary);
+      font-family: var(--font-serif-cn);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .modal-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .modal-btn.primary {
+      background: #e4c5c8;
+      color: #181316;
+      border-color: transparent;
+      font-weight: 600;
+    }
+
+    .modal-btn.primary:hover {
+      background: #efd4d7;
+    }
+
+    /* Subtle interaction hint toast */
+    .gesture-hint {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 15;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(14, 13, 20, 0.62);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: rgba(242, 230, 233, 0.72);
+      font-family: var(--font-serif-cn);
+      font-size: 11.5px;
+      letter-spacing: 0.12em;
+      pointer-events: none;
+      opacity: 0;
+      animation: hintFade 4.5s ease 0.8s forwards;
+    }
+
+    @keyframes hintFade {
+      0% { opacity: 0; transform: translate(-50%, -42%); }
+      18% { opacity: 1; transform: translate(-50%, -50%); }
+      78% { opacity: 1; transform: translate(-50%, -50%); }
+      100% { opacity: 0; transform: translate(-50%, -56%); }
+    }
+  </style>
+</head>
+<body data-theme="ribbon">
+
+  <!-- Fullscreen 3D Particle Canvas -->
+  <canvas id="scene"></canvas>
+
+  <!-- Top Minimal Header & Controls -->
+  <header class="top-bar">
+    <div class="brand-header">
+      <div class="brand-title">星愿 · STARLIT CHRISTMAS</div>
+      <div class="brand-subtitle">愿以星河为祝祷，收藏今夜温柔</div>
+    </div>
+    <div class="top-actions">
+      <button id="snowToggleBtn" class="glass-chip is-active" type="button" aria-label="切换飘雪">
+        <span class="chip-dot"></span>
+        <span>❄ 飘雪</span>
+      </button>
+      <button id="editBlessingBtn" class="glass-chip" type="button" aria-label="自定义寄语">
+        <span>✎ 寄语</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Subtle First-Load Gesture Hint -->
+  <div class="gesture-hint">滑动旋转圣诞树 · 点击绽放星愿</div>
+
+  <!-- Bottom Typography & Style Switcher -->
+  <footer class="bottom-stage">
+    <div id="blessingTrigger" class="blessing-block" title="点击自定义节日寄语">
+      <h1 id="blessingTitle" class="blessing-main">Merry Christmas</h1>
+      <p id="blessingCn" class="blessing-cn">愿所有美好，如期而至</p>
+      <p id="blessingSub" class="blessing-sub">✦ MAY YOUR WISHES FIND THEIR LIGHT ✦</p>
+    </div>
+
+    <nav class="mode-switcher" aria-label="圣诞树样式切换">
+      <button class="mode-btn active" data-mode="ribbon" type="button">星愿灯条</button>
+      <button class="mode-btn" data-mode="snow" type="button">初雪覆松</button>
+      <button class="mode-btn" data-mode="rose" type="button">柔粉星梦</button>
+    </nav>
+  </footer>
+
+  <!-- Custom Blessing Editor Modal -->
+  <div id="blessingModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalHeading">
+    <div class="modal-card">
+      <div id="modalHeading" class="modal-title">✦ 定制专属圣诞寄语 ✦</div>
+      <div class="field-group">
+        <label class="field-label" for="inputTitle">英文 / 主标题</label>
+        <input id="inputTitle" class="field-input" type="text" maxlength="32" value="Merry Christmas" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="inputCn">中文祝福语</label>
+        <input id="inputCn" class="field-input" type="text" maxlength="28" value="愿所有美好，如期而至" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="inputSub">星愿副标</label>
+        <input id="inputSub" class="field-input" type="text" maxlength="46" value="✦ MAY YOUR WISHES FIND THEIR LIGHT ✦" />
+      </div>
+      <div class="modal-actions">
+        <button id="resetBlessingBtn" class="modal-btn" type="button">恢复默认</button>
+        <button id="closeModalBtn" class="modal-btn" type="button">取消</button>
+        <button id="saveBlessingBtn" class="modal-btn primary" type="button">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * ==========================================================================
+     * 星愿 · Starlit Christmas — Custom 3D Perspective Particle Engine
+     * Pure Vanilla HTML5 Canvas, 60fps, Zero External Dependencies
+     * ==========================================================================
+     */
+    (function () {
+      'use strict';
+
+      const canvas = document.getElementById('scene');
+      const ctx = canvas.getContext('2d', { alpha: false });
+
+      // UI Elements
+      const modeButtons = document.querySelectorAll('.mode-btn');
+      const snowToggleBtn = document.getElementById('snowToggleBtn');
+      const editBlessingBtn = document.getElementById('editBlessingBtn');
+      const blessingTrigger = document.getElementById('blessingTrigger');
+      const blessingModal = document.getElementById('blessingModal');
+      const closeModalBtn = document.getElementById('closeModalBtn');
+      const saveBlessingBtn = document.getElementById('saveBlessingBtn');
+      const resetBlessingBtn = document.getElementById('resetBlessingBtn');
+      const inputTitle = document.getElementById('inputTitle');
+      const inputCn = document.getElementById('inputCn');
+      const inputSub = document.getElementById('inputSub');
+      const elTitle = document.getElementById('blessingTitle');
+      const elCn = document.getElementById('blessingCn');
+      const elSub = document.getElementById('blessingSub');
+
+      // Viewport & DPR state
+      let width = window.innerWidth;
+      let height = window.innerHeight;
+      let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      // 3D Tree & Camera Constants
+      const TREE_HEIGHT = 430;
+      const TREE_BASE_RADIUS = 168;
+      const CAMERA_FOV = 640;
+      const CAMERA_DIST = 690;
+
+      // Interactive Camera State
+      const camera = {
+        rotY: 0.35,
+        velY: 0.0042,
+        baseSpeed: 0.0042,
+        rotX: 0.13,
+        targetRotX: 0.13,
+        zoom: 1.0,
+        targetZoom: 1.0,
+        isDragging: false,
+        lastX: 0,
+        lastY: 0,
+        dragDistance: 0,
+        pinchStartDist: 0,
+        pinchStartZoom: 1.0
+      };
+
+      // Theme Definitions with Smooth Color Interpolation
+      const THEMES = {
+        ribbon: {
+          name: 'ribbon',
+          bgTop: [5, 5, 8],
+          bgMid: [11, 9, 18],
+          // Foliage colors (deep forest emerald + rich pine highlights)
+          foliageDark: [8, 34, 21],
+          foliageMid: [18, 68, 42],
+          foliageLight: [36, 118, 72],
+          // Branch tip accent (subtle warm frost/dew on needle tips)
+          tipColor: [148, 198, 172],
+          tipAlpha: 0.25,
+          // Primary spiral light ribbon ("灯条式" rose-gold & warm champagne)
+          ribbonCore: [255, 236, 232],
+          ribbonGlow: [242, 182, 192],
+          ribbonStrength: 1.0,
+          secondaryRibbon: 0.0,
+          // Sparkle fairy lights
+          sparkleA: [255, 224, 185],
+          sparkleB: [255, 196, 210],
+          // Star topper
+          starCore: [255, 245, 242],
+          starGlow: [244, 194, 202],
+          // Ground rings
+          ringColor: [232, 192, 198],
+          // Snow intensity
+          defaultSnow: true,
+          snowDensity: 0.35,
+          snowTint: [245, 238, 242],
+          // Gift palettes
+          gifts: [
+            { box: [222, 166, 176], shade: [168, 114, 124], ribbon: [255, 246, 247] }, // Blush pink
+            { box: [218, 190, 138], shade: [164, 138, 90],  ribbon: [255, 250, 236] }, // Champagne gold
+            { box: [236, 228, 228], shade: [184, 174, 176], ribbon: [224, 172, 182] }  // Pearl white
+          ]
+        },
+        snow: {
+          name: 'snow',
+          bgTop: [4, 7, 13],
+          bgMid: [10, 17, 29],
+          // Cool spruce interior + heavy silver-white snow caps on boughs
+          foliageDark: [10, 30, 42],
+          foliageMid: [24, 62, 78],
+          foliageLight: [68, 118, 136],
+          // Heavy snow accumulation along upper bough ridges
+          tipColor: [242, 250, 255],
+          tipAlpha: 0.95,
+          // Frosted ice-blue & silver light garland
+          ribbonCore: [235, 248, 255],
+          ribbonGlow: [152, 214, 252],
+          ribbonStrength: 0.72,
+          secondaryRibbon: 0.0,
+          sparkleA: [220, 245, 255],
+          sparkleB: [255, 255, 255],
+          starCore: [245, 252, 255],
+          starGlow: [176, 224, 255],
+          ringColor: [188, 226, 248],
+          defaultSnow: true,
+          snowDensity: 1.0,
+          snowTint: [240, 249, 255],
+          gifts: [
+            { box: [196, 222, 238], shade: [142, 170, 190], ribbon: [255, 255, 255] }, // Glacier ice
+            { box: [234, 240, 246], shade: [178, 188, 200], ribbon: [148, 198, 232] }, // Frost pearl
+            { box: [184, 204, 224], shade: [132, 152, 174], ribbon: [242, 248, 255] }  // Silver slate
+          ]
+        },
+        rose: {
+          name: 'rose',
+          bgTop: [8, 4, 9],
+          bgMid: [18, 10, 20],
+          // Romantic dusty rose, berry & pearl-pink foliage
+          foliageDark: [56, 20, 34],
+          foliageMid: [118, 48, 72],
+          foliageLight: [186, 98, 126],
+          tipColor: [255, 214, 226],
+          tipAlpha: 0.55,
+          // Dual intertwined champagne-gold & pearl-rose ribbons
+          ribbonCore: [255, 244, 230],
+          ribbonGlow: [255, 184, 206],
+          ribbonStrength: 0.96,
+          secondaryRibbon: 0.85,
+          sparkleA: [255, 224, 178],
+          sparkleB: [255, 192, 218],
+          starCore: [255, 244, 236],
+          starGlow: [255, 188, 212],
+          ringColor: [244, 186, 206],
+          defaultSnow: true,
+          snowDensity: 0.45,
+          snowTint: [255, 234, 242],
+          gifts: [
+            { box: [238, 176, 194], shade: [184, 120, 140], ribbon: [255, 242, 220] }, // Rose petal
+            { box: [236, 204, 156], shade: [182, 150, 104], ribbon: [255, 246, 248] }, // Warm gold
+            { box: [246, 232, 236], shade: [194, 176, 182], ribbon: [232, 158, 182] }  // Silk ivory
+          ]
+        }
+      };
+
+      // Active & Interpolated Visual State
+      let currentThemeKey = 'ribbon';
+      let snowEnabled = true;
+      const visual = cloneTheme(THEMES.ribbon);
+
+      function cloneTheme(t) {
+        return JSON.parse(JSON.stringify(t));
+      }
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
+      function lerpColor(curr, target, t) {
+        curr[0] = lerp(curr[0], target[0], t);
+        curr[1] = lerp(curr[1], target[1], t);
+        curr[2] = lerp(curr[2], target[2], t);
+      }
+
+      function rgb(c, a = 1) {
+        return `rgba(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])},${a.toFixed(3)})`;
+      }
+
+      // ========================================================================
+      // Data Structures for 3D Scene Entities
+      // ========================================================================
+      const treeParticles = [];     // ~4,600 pine foliage, snow-cap, & fairy-light particles
+      const ribbonNodes = [];       // ~920 primary spiral light strip nodes
+      const secondRibbonNodes = []; // ~680 secondary intertwined light strip nodes
+      const giftBoxes = [];         // 8 3D perspective gift boxes nestled in branches
+      const groundRings = [];       // 3 concentric floor stardust rings
+      const bgStars = [];           // Distant twinkling stars & bokeh orbs
+      const snowflakes = [];        // Multi-layered falling snow & crystals
+      const wishBursts = [];        // Interactive click/tap rising wish spirals
+
+      /**
+       * Build the 3D Tiered Conical Fir Tree Particles
+       * Uses 12 layered evergreen tiers with fluted radial boughs and drooping tips
+       */
+      function initTreeParticles() {
+        treeParticles.length = 0;
+        const TIERS = 12;
+        const FOLIAGE_COUNT = 4400;
+
+        for (let i = 0; i < FOLIAGE_COUNT; i++) {
+          // Bias slightly denser toward lower/middle tiers for lush volume
+          const u = Math.pow(Math.random(), 0.86);
+          const yNorm = u; // 0 at base, 1 at top
+          const yBase = yNorm * (TREE_HEIGHT - 16) + 12;
+
+          // Tiered branch sculpting
+          const tierPos = yNorm * TIERS;
+          const tierIndex = Math.floor(tierPos);
+          const tierFrac = tierPos - tierIndex; // 0 at bottom of tier, 1 at top of tier
+
+          // Each tier flares out at its bottom edge and tucks in toward the top
+          const tierFlare = Math.pow(1 - tierFrac, 0.72);
+          const coneRadius = (1 - Math.pow(yNorm, 0.94)) * TREE_BASE_RADIUS;
+          const tierEnvelope = coneRadius * (0.58 + 0.52 * tierFlare);
+
+          // Radial angle + fluted branch lobes (more lobes near base, fewer near apex)
+          const angle = Math.random() * Math.PI * 2;
+          const lobeCount = Math.max(5, Math.round(11 - yNorm * 6));
+          const lobeWave = 0.84 + 0.16 * Math.cos(angle * lobeCount + tierIndex * 1.15);
+
+          // Radial distribution: concentrated near outer silhouette with interior volume
+          const radialMix = 0.25 + 0.75 * Math.pow(Math.random(), 0.55);
+          const r = tierEnvelope * lobeWave * radialMix;
+
+          // Natural downward branch droop near outer tips
+          const droop = Math.pow(radialMix, 1.8) * (1 - yNorm * 0.5) * 14;
+          const y = yBase - droop + (Math.random() - 0.5) * 6;
+          const x = Math.cos(angle) * r;
+          const z = Math.sin(angle) * r;
+
+          // Determine particle role:
+          // - 'tip': upper/outer ridge of each bough (collects snow in Frosted Snow mode!)
+          // - 'sparkle': warm fairy light embedded in the pine
+          // - 'foliage': deep volumetric pine needle cluster
+          const isOuterTip = radialMix > 0.76 && tierFrac > 0.42;
+          const isSparkle = !isOuterTip && Math.random() < 0.085;
+
+          let role = 'foliage';
+          if (isOuterTip) role = 'tip';
+          else if (isSparkle) role = 'sparkle';
+
+          treeParticles.push({
+            x,
+            y,
+            z,
+            yNorm,
+            radialMix,
+            role,
+            shadeSeed: Math.random(),
+            sparkleGroup: Math.random() < 0.5 ? 0 : 1,
+            size: role === 'sparkle'
+              ? 1.5 + Math.random() * 1.8
+              : role === 'tip'
+                ? 1.4 + Math.random() * 1.6
+                : 1.5 + Math.random() * 2.1,
+            twinklePhase: Math.random() * Math.PI * 2,
+            twinkleSpeed: 1.4 + Math.random() * 2.6
+          });
+        }
+      }
+
+      /**
+       * Build Continuous Spiral Light Strips ("灯条式")
+       * Wraps smoothly from the base of the tree up to the top star
+       */
+      function initSpiralRibbons() {
+        ribbonNodes.length = 0;
+        secondRibbonNodes.length = 0;
+
+        const PRIMARY_POINTS = 920;
+        const TURNS = 7.15;
+
+        for (let i = 0; i <= PRIMARY_POINTS; i++) {
+          const t = i / PRIMARY_POINTS; // 0 (bottom) -> 1 (apex)
+          const y = 14 + t * (TREE_HEIGHT - 22);
+          const angle = t * TURNS * Math.PI * 2;
+
+          // Hug the outer edge of the tiered pine boughs with subtle organic drape
+          const coneR = (1 - Math.pow(t, 0.94)) * (TREE_BASE_RADIUS + 8);
+          const tierRipple = Math.sin(t * 12 * Math.PI * 2) * 3.8 * (1 - t * 0.6);
+          const r = Math.max(2.5, coneR + tierRipple);
+
+          ribbonNodes.push({
+            x: Math.cos(angle) * r,
+            y: y + Math.sin(angle * 3) * 1.4,
+            z: Math.sin(angle) * r,
+            t,
+            phase: t * 24
+          });
+        }
+
+        // Secondary delicate intertwined ribbon (active in Blush Rose & subtle accent)
+        const SECOND_POINTS = 640;
+        for (let i = 0; i <= SECOND_POINTS; i++) {
+          const t = i / SECOND_POINTS;
+          const y = 18 + t * (TREE_HEIGHT - 28);
+          const angle = t * (TURNS - 0.5) * Math.PI * 2 + Math.PI;
+          const coneR = (1 - Math.pow(t, 0.94)) * (TREE_BASE_RADIUS + 5);
+          const r = Math.max(2, coneR);
+
+          secondRibbonNodes.push({
+            x: Math.cos(angle) * r,
+            y,
+            z: Math.sin(angle) * r,
+            t,
+            phase: t * 18 + 1.5
+          });
+        }
+      }
+
+      /**
+       * Build 8 3D Perspective Gift Boxes Nestled on Lower & Middle Boughs
+       */
+      function initGiftBoxes() {
+        giftBoxes.length = 0;
+        const specs = [
+          { y: 36,  angle: 0.45, radiusFactor: 0.93, size: [22, 18, 22], yaw: 0.35, palette: 2 },
+          { y: 62,  angle: 1.55, radiusFactor: 0.91, size: [20, 17, 20], yaw: -0.25, palette: 0 },
+          { y: 54,  angle: 2.75, radiusFactor: 0.94, size: [21, 18, 21], yaw: 0.55, palette: 1 },
+          { y: 28,  angle: 3.65, radiusFactor: 0.96, size: [23, 19, 23], yaw: -0.4, palette: 2 },
+          { y: 78,  angle: 4.55, radiusFactor: 0.89, size: [19, 16, 19], yaw: 0.2,  palette: 1 },
+          { y: 46,  angle: 4.68, radiusFactor: 0.95, size: [17, 15, 17], yaw: -0.5, palette: 0 },
+          { y: 112, angle: 5.55, radiusFactor: 0.86, size: [17, 14, 17], yaw: 0.42, palette: 0 },
+          { y: 148, angle: 2.15, radiusFactor: 0.84, size: [14, 12, 14], yaw: -0.3, palette: 1 }
+        ];
+
+        specs.forEach((s) => {
+          const yNorm = s.y / TREE_HEIGHT;
+          const r = (1 - Math.pow(yNorm, 0.94)) * TREE_BASE_RADIUS * s.radiusFactor;
+          giftBoxes.push({
+            x: Math.cos(s.angle) * r,
+            y: s.y,
+            z: Math.sin(s.angle) * r,
+            w: s.size[0],
+            h: s.size[1],
+            d: s.size[2],
+            yaw: s.yaw,
+            paletteIdx: s.palette
+          });
+        });
+      }
+
+      /**
+       * Build 3 Concentric Ground Stardust Rings
+       */
+      function initGroundRings() {
+        groundRings.length = 0;
+        const radii = [188, 224, 262];
+        const counts = [150, 180, 210];
+
+        radii.forEach((radius, ringIdx) => {
+          const dots = [];
+          const count = counts[ringIdx];
+          for (let i = 0; i < count; i++) {
+            const a = (i / count) * Math.PI * 2;
+            // Create subtle celestial constellation gaps
+            const gapMask = Math.sin(a * (4 + ringIdx) + ringIdx) > -0.65;
+            if (!gapMask && i % 2 === 0) continue;
+            dots.push({
+              angle: a,
+              radius: radius + (Math.random() - 0.5) * 3.5,
+              size: 0.9 + Math.random() * 1.3,
+              alpha: 0.25 + Math.random() * 0.55
+            });
+          }
+          groundRings.push({
+            dots,
+            speed: (ringIdx % 2 === 0 ? 1 : -1) * (0.08 + ringIdx * 0.03)
+          });
+        });
+      }
+
+      /**
+       * Build Distant Background Stars & Soft Bokeh Orbs
+       */
+      function initBackgroundStars() {
+        bgStars.length = 0;
+        const count = 130;
+        for (let i = 0; i < count; i++) {
+          const isBokeh = i < 22;
+          bgStars.push({
+            nx: Math.random(),
+            ny: Math.random(),
+            radius: isBokeh ? 4 + Math.random() * 10 : 0.6 + Math.random() * 1.4,
+            isBokeh,
+            alpha: isBokeh ? 0.04 + Math.random() * 0.07 : 0.2 + Math.random() * 0.65,
+            phase: Math.random() * Math.PI * 2,
+            speed: 0.6 + Math.random() * 1.8,
+            parallax: isBokeh ? 18 : 6
+          });
+        }
+      }
+
+      /**
+       * Build Multi-Layered Falling Snow Particles (Crystal Snowflakes + Soft Snow Bokeh)
+       */
+      function initSnowflakes() {
+        snowflakes.length = 0;
+        const SNOW_COUNT = 240;
+        for (let i = 0; i < SNOW_COUNT; i++) {
+          const layer = i < 45 ? 'fg' : i < 155 ? 'mid' : 'bg';
+          snowflakes.push({
+            x: Math.random() * 1.2 - 0.1, // normalized screen X (-0.1 to 1.1)
+            y: Math.random() * 1.2 - 0.1, // normalized screen Y
+            layer,
+            radius: layer === 'fg'
+              ? 3.2 + Math.random() * 3.4
+              : layer === 'mid'
+                ? 1.6 + Math.random() * 2.1
+                : 0.9 + Math.random() * 1.2,
+            speedY: layer === 'fg'
+              ? 0.00085 + Math.random() * 0.00065
+              : layer === 'mid'
+                ? 0.00048 + Math.random() * 0.0004
+                : 0.00025 + Math.random() * 0.00022,
+            swayAmp: layer === 'fg' ? 0.00055 : 0.0003,
+            swayFreq: 0.7 + Math.random() * 1.2,
+            phase: Math.random() * Math.PI * 2,
+            spin: (Math.random() - 0.5) * 1.5,
+            isCrystal: layer !== 'bg' && Math.random() < 0.42,
+            alpha: layer === 'fg'
+              ? 0.45 + Math.random() * 0.4
+              : layer === 'mid'
+                ? 0.35 + Math.random() * 0.45
+                : 0.2 + Math.random() * 0.3
+          });
+        }
+      }
+
+      // ========================================================================
+      // 3D Projection Math
+      // ========================================================================
+      function getStageMetrics() {
+        // Reserve top header (~74px) and bottom blessing + pill switcher (~172px)
+        const topReserve = Math.max(72, height * 0.11);
+        const bottomReserve = Math.max(168, height * 0.24);
+        const availableH = Math.max(240, height - topReserve - bottomReserve);
+
+        // Fit tree height + apex star + base rings cleanly within available stage
+        const baseScaleY = availableH / (TREE_HEIGHT + 72);
+        const baseScaleX = (width * 0.86) / (TREE_BASE_RADIUS * 2.35);
+        const stageScale = Math.min(baseScaleY, baseScaleX, 1.38) * camera.zoom;
+
+        // Center vertically in the middle of the stage
+        const centerX = width * 0.5;
+        const baseScreenY = topReserve + availableH * 0.89;
+
+        return { centerX, baseScreenY, stageScale };
+      }
+
+      function project3D(x, y, z, cosY, sinY, cosX, sinX, metrics) {
+        // Rotate around Y axis (tree spin)
+        const rx = x * cosY - z * sinY;
+        const rz = x * sinY + z * cosY;
+
+        // Pivot vertical tilt around middle of tree (y = TREE_HEIGHT * 0.45)
+        const py = y - TREE_HEIGHT * 0.45;
+        const ry = py * cosX - rz * sinX + TREE_HEIGHT * 0.45;
+        const finalZ = py * sinX + rz * cosX;
+
+        const perspective = CAMERA_FOV / (CAMERA_FOV + finalZ + CAMERA_DIST * 0.28);
+        const sx = metrics.centerX + rx * perspective * metrics.stageScale;
+        const sy = metrics.baseScreenY - ry * perspective * metrics.stageScale;
+
+        return {
+          sx,
+          sy,
+          z: finalZ,
+          scale: perspective * metrics.stageScale
+        };
+      }
+
+      // ========================================================================
+      // 3D Gift Box Renderer (True Perspective Faces + Satin Cross-Ribbons + Bow)
+      // ========================================================================
+      function drawGiftBox3D(box, cosY, sinY, cosX, sinX, metrics) {
+        const hw = box.w * 0.5;
+        const hh = box.h * 0.5;
+        const hd = box.d * 0.5;
+        const cy = Math.cos(box.yaw);
+        const sy = Math.sin(box.yaw);
+
+        // Helper to transform local box point -> world -> 2D screen
+        function transformPt(lx, ly, lz) {
+          const wx = box.x + (lx * cy - lz * sy);
+          const wy = box.y + ly;
+          const wz = box.z + (lx * sy + lz * cy);
+          return project3D(wx, wy, wz, cosY, sinY, cosX, sinX, metrics);
+        }
+
+        // 8 Corners of the 3D box
+        const c = [
+          transformPt(-hw, -hh, -hd), // 0: bottom-back-left
+          transformPt( hw, -hh, -hd), // 1: bottom-back-right
+          transformPt( hw, -hh,  hd), // 2: bottom-front-right
+          transformPt(-hw, -hh,  hd), // 3: bottom-front-left
+          transformPt(-hw,  hh, -hd), // 4: top-back-left
+          transformPt( hw,  hh, -hd), // 5: top-back-right
+          transformPt( hw,  hh,  hd), // 6: top-front-right
+          transformPt(-hw,  hh,  hd)  // 7: top-front-left
+        ];
+
+        const pal = visual.gifts[box.paletteIdx];
+        const baseFill = rgb(pal.box, 0.96);
+        const shadeFill = rgb(pal.shade, 0.96);
+        const topFill = rgb([
+          Math.min(255, pal.box[0] + 18),
+          Math.min(255, pal.box[1] + 18),
+          Math.min(255, pal.box[2] + 18)
+        ], 0.98);
+        const ribbonFill = rgb(pal.ribbon, 0.95);
+
+        // 6 Faces with outward vertex winding (CCW in screen space when visible)
+        const faces = [
+          { idx: [4, 7, 6, 5], fill: topFill,   isTop: true  }, // Top
+          { idx: [3, 2, 6, 7], fill: baseFill,  isTop: false }, // Front
+          { idx: [2, 1, 5, 6], fill: shadeFill, isTop: false }, // Right
+          { idx: [1, 0, 4, 5], fill: shadeFill, isTop: false }, // Back
+          { idx: [0, 3, 7, 4], fill: baseFill,  isTop: false }, // Left
+          { idx: [0, 1, 2, 3], fill: shadeFill, isTop: false }  // Bottom
+        ];
+
+        faces.forEach((f) => {
+          const p0 = c[f.idx[0]];
+          const p1 = c[f.idx[1]];
+          const p2 = c[f.idx[2]];
+          const p3 = c[f.idx[3]];
+
+          // 2D cross product for backface culling
+          const cross = (p1.sx - p0.sx) * (p2.sy - p0.sy) - (p1.sy - p0.sy) * (p2.sx - p0.sx);
+          if (cross >= 0) return; // Back-facing
+
+          // Draw box face
+          ctx.beginPath();
+          ctx.moveTo(p0.sx, p0.sy);
+          ctx.lineTo(p1.sx, p1.sy);
+          ctx.lineTo(p2.sx, p2.sy);
+          ctx.lineTo(p3.sx, p3.sy);
+          ctx.closePath();
+          ctx.fillStyle = f.fill;
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+
+          // Draw satin ribbon stripe(s) along face midlines
+          ctx.strokeStyle = ribbonFill;
+          const ribbonW = Math.max(1.8, (p0.scale * box.w) * 0.16);
+          ctx.lineWidth = ribbonW;
+          ctx.lineCap = 'butt';
+
+          // Vertical / first midline
+          ctx.beginPath();
+          ctx.moveTo((p0.sx + p1.sx) * 0.5, (p0.sy + p1.sy) * 0.5);
+          ctx.lineTo((p3.sx + p2.sx) * 0.5, (p3.sy + p2.sy) * 0.5);
+          ctx.stroke();
+
+          // Cross ribbon on top face
+          if (f.isTop) {
+            ctx.beginPath();
+            ctx.moveTo((p1.sx + p2.sx) * 0.5, (p1.sy + p2.sy) * 0.5);
+            ctx.lineTo((p0.sx + p3.sx) * 0.5, (p0.sy + p3.sy) * 0.5);
+            ctx.stroke();
+          }
+        });
+
+        // Draw delicate 3D ribbon bow on top center of the gift box
+        const topCenter = transformPt(0, hh + 1.5, 0);
+        const bowLeft = transformPt(-hw * 0.45, hh + 5.2, -hd * 0.15);
+        const bowRight = transformPt(hw * 0.45, hh + 5.2, hd * 0.15);
+        const rBow = Math.max(2.2, topCenter.scale * 3.8);
+
+        ctx.strokeStyle = ribbonFill;
+        ctx.lineWidth = Math.max(1.4, rBow * 0.48);
+        ctx.beginPath();
+        ctx.ellipse(
+          (topCenter.sx + bowLeft.sx) * 0.5,
+          (topCenter.sy + bowLeft.sy) * 0.5,
+          rBow,
+          rBow * 0.55,
+          -0.35,
+          0,
+          Math.PI * 2
+        );
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.ellipse(
+          (topCenter.sx + bowRight.sx) * 0.5,
+          (topCenter.sy + bowRight.sy) * 0.5,
+          rBow,
+          rBow * 0.55,
+          0.35,
+          0,
+          Math.PI * 2
+        );
+        ctx.stroke();
+      }
+
+      // ========================================================================
+      // Radiant 3D 5-Pointed Star Topper
+      // ========================================================================
+      function drawApexStar(time, cosY, sinY, cosX, sinX, metrics) {
+        const apex = project3D(0, TREE_HEIGHT + 13, 0, cosY, sinY, cosX, sinX, metrics);
+        const pulse = 0.88 + 0.12 * Math.sin(time * 2.6);
+        const outerR = Math.max(13, 18.5 * apex.scale);
+        const innerR = outerR * 0.42;
+
+        ctx.save();
+        ctx.translate(apex.sx, apex.sy);
+
+        // 1. Soft atmospheric radial halo
+        ctx.globalCompositeOperation = 'lighter';
+        const haloR = outerR * (3.4 + 0.3 * Math.sin(time * 2.1));
+        const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, haloR);
+        grad.addColorStop(0, rgb(visual.starCore, 0.55 * pulse));
+        grad.addColorStop(0.35, rgb(visual.starGlow, 0.24 * pulse));
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 0, haloR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Subtle cross-flare starlight beams
+        ctx.strokeStyle = rgb(visual.starCore, 0.28 * pulse);
+        ctx.lineWidth = 1.1;
+        const flareLen = outerR * 2.6;
+        ctx.beginPath();
+        ctx.moveTo(-flareLen, 0);
+        ctx.lineTo(flareLen, 0);
+        ctx.moveTo(0, -flareLen * 0.85);
+        ctx.lineTo(0, flareLen * 0.85);
+        ctx.stroke();
+
+        // 3. Crisp 5-Pointed Faceted Star Silhouette
+        ctx.globalCompositeOperation = 'source-over';
+        const starGrad = ctx.createLinearGradient(-outerR, -outerR, outerR, outerR);
+        starGrad.addColorStop(0, '#ffffff');
+        starGrad.addColorStop(0.5, rgb(visual.starCore, 1));
+        starGrad.addColorStop(1, rgb(visual.starGlow, 0.95));
+
+        ctx.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const r = i % 2 === 0 ? outerR : innerR;
+          const a = -Math.PI / 2 + (i * Math.PI) / 5;
+          const px = Math.cos(a) * r;
+          const py = Math.sin(a) * r;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = starGrad;
+        ctx.shadowColor = rgb(visual.starGlow, 0.85);
+        ctx.shadowBlur = 16;
+        ctx.fill();
+
+        // Inner bevel lines for 3D sculpted look
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.lineWidth = 0.7;
+        for (let i = 0; i < 5; i++) {
+          const a = -Math.PI / 2 + (i * Math.PI * 2) / 5;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(a) * outerR * 0.92, Math.sin(a) * outerR * 0.92);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      // ========================================================================
+      // Continuous Spiral Light Ribbon ("灯条式") Renderer
+      // ========================================================================
+      function drawSpiralRibbon(nodes, time, cosY, sinY, cosX, sinX, metrics, strength, isSecondary) {
+        if (strength <= 0.02) return;
+
+        const projected = new Array(nodes.length);
+        for (let i = 0; i < nodes.length; i++) {
+          const n = nodes[i];
+          projected[i] = project3D(n.x, n.y, n.z, cosY, sinY, cosX, sinX, metrics);
+        }
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Draw segmented glowing ribbon strips with depth-aware opacity
+        for (let i = 0; i < projected.length - 1; i++) {
+          const p0 = projected[i];
+          const p1 = projected[i + 1];
+          const avgZ = (p0.z + p1.z) * 0.5;
+
+          // Front-facing segments gleam brightly; back-facing segments glow softly through foliage
+          const depthFactor = avgZ < 20 ? 1.0 : Math.max(0.16, 1 - (avgZ - 20) / 210);
+          const taper = 1 - nodes[i].t * 0.35;
+          const wavePulse = 0.82 + 0.18 * Math.sin(nodes[i].phase - time * 3.4);
+          const alpha = depthFactor * strength * wavePulse * (isSecondary ? 0.62 : 0.92);
+
+          if (alpha < 0.03) continue;
+
+          // Outer soft neon/LED halo
+          ctx.strokeStyle = rgb(visual.ribbonGlow, alpha * 0.34);
+          ctx.lineWidth = Math.max(2.6, 6.2 * p0.scale * taper);
+          ctx.beginPath();
+          ctx.moveTo(p0.sx, p0.sy);
+          ctx.lineTo(p1.sx, p1.sy);
+          ctx.stroke();
+
+          // Bright incandescent inner core filament
+          ctx.strokeStyle = rgb(visual.ribbonCore, alpha * 0.95);
+          ctx.lineWidth = Math.max(1.0, 2.1 * p0.scale * taper);
+          ctx.beginPath();
+          ctx.moveTo(p0.sx, p0.sy);
+          ctx.lineTo(p1.sx, p1.sy);
+          ctx.stroke();
+        }
+
+        // Add subtle sparkling LED nodes along front-facing ribbon intervals
+        const step = isSecondary ? 9 : 6;
+        for (let i = 0; i < projected.length; i += step) {
+          const p = projected[i];
+          if (p.z > 25) continue;
+          const shimmer = 0.5 + 0.5 * Math.sin(nodes[i].phase * 1.7 - time * 4.2);
+          const r = Math.max(1.2, 2.5 * p.scale * (0.7 + 0.5 * shimmer));
+          ctx.fillStyle = rgb(visual.ribbonCore, strength * (0.45 + 0.5 * shimmer));
+          ctx.beginPath();
+          ctx.arc(p.sx, p.sy, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
+
+      // ========================================================================
+      // Interactive Wish Burst Effect (Click / Tap Anywhere)
+      // ========================================================================
+      function spawnWishBurst(screenX, screenY) {
+        const sparkCount = 34;
+        for (let i = 0; i < sparkCount; i++) {
+          const angle = (i / sparkCount) * Math.PI * 2 + Math.random() * 0.3;
+          const speed = 1.2 + Math.random() * 3.4;
+          wishBursts.push({
+            x: screenX,
+            y: screenY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 1.6,
+            swirl: (Math.random() - 0.5) * 0.09,
+            life: 1.0,
+            decay: 0.014 + Math.random() * 0.012,
+            size: 1.6 + Math.random() * 2.4,
+            isGold: i % 2 === 0
+          });
+        }
+      }
+
+      function updateAndDrawWishBursts() {
+        if (wishBursts.length === 0) return;
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+
+        for (let i = wishBursts.length - 1; i >= 0; i--) {
+          const p = wishBursts[i];
+          p.life -= p.decay;
+          if (p.life <= 0) {
+            wishBursts.splice(i, 1);
+            continue;
+          }
+
+          // Gentle upward spiral drift
+          const nx = p.vx * Math.cos(p.swirl) - p.vy * Math.sin(p.swirl);
+          const ny = p.vx * Math.sin(p.swirl) + p.vy * Math.cos(p.swirl);
+          p.vx = nx * 0.985;
+          p.vy = ny * 0.985 - 0.045;
+          p.x += p.vx;
+          p.y += p.vy;
+
+          const col = p.isGold ? visual.starCore : visual.ribbonGlow;
+          const r = p.size * p.life;
+
+          ctx.fillStyle = rgb(col, p.life * 0.9);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Soft trailing glow
+          ctx.fillStyle = rgb(col, p.life * 0.25);
+          ctx.beginPath();
+          ctx.arc(p.x - p.vx * 1.5, p.y - p.vy * 1.5, r * 2.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
+
+      // ========================================================================
+      // Snowfall Renderer (Crystals + Soft Bokeh Snow)
+      // ========================================================================
+      function drawSnowflakeCrystal(x, y, radius, angle, colorStr) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.strokeStyle = colorStr;
+        ctx.lineWidth = Math.max(0.8, radius * 0.22);
+        ctx.lineCap = 'round';
+
+        for (let i = 0; i < 3; i++) {
+          ctx.rotate(Math.PI / 3);
+          ctx.beginPath();
+          ctx.moveTo(-radius, 0);
+          ctx.lineTo(radius, 0);
+          ctx.stroke();
+
+          // Delicate crystal branches
+          const b = radius * 0.45;
+          ctx.beginPath();
+          ctx.moveTo(radius * 0.52, 0);
+          ctx.lineTo(radius * 0.52 + b * 0.6, -b * 0.6);
+          ctx.moveTo(radius * 0.52, 0);
+          ctx.lineTo(radius * 0.52 + b * 0.6, b * 0.6);
+          ctx.moveTo(-radius * 0.52, 0);
+          ctx.lineTo(-radius * 0.52 - b * 0.6, -b * 0.6);
+          ctx.moveTo(-radius * 0.52, 0);
+          ctx.lineTo(-radius * 0.52 - b * 0.6, b * 0.6);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function updateAndDrawSnow(time, targetLayer) {
+        const effectiveDensity = snowEnabled ? visual.snowDensity : 0;
+        if (effectiveDensity <= 0.01) return;
+
+        const maxIndex = Math.floor(snowflakes.length * effectiveDensity);
+        for (let i = 0; i < maxIndex; i++) {
+          const s = snowflakes[i];
+          if (s.layer !== targetLayer) continue;
+
+          // Update position once per frame (during 'bg' or 'fg' pass)
+          s.y += s.speedY * (0.75 + 0.45 * effectiveDensity);
+          s.x += Math.sin(time * s.swayFreq + s.phase) * s.swayAmp;
+
+          if (s.y > 1.08) {
+            s.y = -0.06;
+            s.x = Math.random();
+          }
+          if (s.x > 1.08) s.x = -0.06;
+          if (s.x < -0.08) s.x = 1.06;
+
+          const sx = s.x * width;
+          const sy = s.y * height;
+          const alpha = s.alpha * Math.min(1, effectiveDensity * 1.35);
+          const colStr = rgb(visual.snowTint, alpha);
+
+          if (s.isCrystal) {
+            drawSnowflakeCrystal(sx, sy, s.radius * 1.35, time * s.spin + s.phase, colStr);
+          } else {
+            ctx.fillStyle = colStr;
+            ctx.beginPath();
+            ctx.arc(sx, sy, s.radius, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+
+      // ========================================================================
+      // Main Animation Loop (60fps)
+      // ========================================================================
+      let lastTimestamp = 0;
+
+      function render(timestamp) {
+        const dt = Math.min((timestamp - lastTimestamp) / 1000, 0.05) || 0.016;
+        lastTimestamp = timestamp;
+        const time = timestamp * 0.001;
+
+        // 1. Smoothly interpolate theme colors & parameters
+        const target = THEMES[currentThemeKey];
+        const blend = 1 - Math.exp(-dt * 4.5);
+        lerpColor(visual.bgTop, target.bgTop, blend);
+        lerpColor(visual.bgMid, target.bgMid, blend);
+        lerpColor(visual.foliageDark, target.foliageDark, blend);
+        lerpColor(visual.foliageMid, target.foliageMid, blend);
+        lerpColor(visual.foliageLight, target.foliageLight, blend);
+        lerpColor(visual.tipColor, target.tipColor, blend);
+        visual.tipAlpha = lerp(visual.tipAlpha, target.tipAlpha, blend);
+        lerpColor(visual.ribbonCore, target.ribbonCore, blend);
+        lerpColor(visual.ribbonGlow, target.ribbonGlow, blend);
+        visual.ribbonStrength = lerp(visual.ribbonStrength, target.ribbonStrength, blend);
+        visual.secondaryRibbon = lerp(visual.secondaryRibbon, target.secondaryRibbon, blend);
+        lerpColor(visual.sparkleA, target.sparkleA, blend);
+        lerpColor(visual.sparkleB, target.sparkleB, blend);
+        lerpColor(visual.starCore, target.starCore, blend);
+        lerpColor(visual.starGlow, target.starGlow, blend);
+        lerpColor(visual.ringColor, target.ringColor, blend);
+        visual.snowDensity = lerp(visual.snowDensity, target.snowDensity, blend);
+        lerpColor(visual.snowTint, target.snowTint, blend);
+        for (let g = 0; g < 3; g++) {
+          lerpColor(visual.gifts[g].box, target.gifts[g].box, blend);
+          lerpColor(visual.gifts[g].shade, target.gifts[g].shade, blend);
+          lerpColor(visual.gifts[g].ribbon, target.gifts[g].ribbon, blend);
+        }
+
+        // 2. Update camera inertia & damping
+        if (!camera.isDragging) {
+          camera.rotY += camera.velY;
+          camera.velY = lerp(camera.velY, camera.baseSpeed, 0.035);
+        }
+        camera.rotX = lerp(camera.rotX, camera.targetRotX, 0.09);
+        camera.zoom = lerp(camera.zoom, camera.targetZoom, 0.1);
+
+        // 3. Draw Deep Velvet Night Background
+        const bgGrad = ctx.createRadialGradient(
+          width * 0.5,
+          height * 0.44,
+          10,
+          width * 0.5,
+          height * 0.5,
+          Math.max(width, height) * 0.82
+        );
+        bgGrad.addColorStop(0, rgb(visual.bgMid, 1));
+        bgGrad.addColorStop(0.65, rgb(visual.bgTop, 1));
+        bgGrad.addColorStop(1, '#020204');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, width, height);
+
+        // 4. Draw Distant Twinkling Stars & Soft Bokeh
+        for (let i = 0; i < bgStars.length; i++) {
+          const st = bgStars[i];
+          const sx = ((st.nx * width - camera.rotY * st.parallax) % width + width) % width;
+          const sy = st.ny * height;
+          const twinkle = 0.55 + 0.45 * Math.sin(time * st.speed + st.phase);
+          const alpha = st.alpha * twinkle;
+
+          if (st.isBokeh) {
+            const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, st.radius);
+            g.addColorStop(0, rgb(visual.ribbonGlow, alpha));
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(sx, sy, st.radius, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            ctx.fillStyle = `rgba(255, 248, 250, ${alpha.toFixed(3)})`;
+            ctx.beginPath();
+            ctx.arc(sx, sy, st.radius, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Background falling snow layer
+        updateAndDrawSnow(time, 'bg');
+
+        const cosY = Math.cos(camera.rotY);
+        const sinY = Math.sin(camera.rotY);
+        const cosX = Math.cos(camera.rotX);
+        const sinX = Math.sin(camera.rotX);
+        const metrics = getStageMetrics();
+
+        // 5. Draw 3 Concentric Ground Stardust Rings
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        groundRings.forEach((ring) => {
+          const rotOffset = time * ring.speed;
+          for (let i = 0; i < ring.dots.length; i++) {
+            const d = ring.dots[i];
+            const a = d.angle + rotOffset;
+            const wx = Math.cos(a) * d.radius;
+            const wz = Math.sin(a) * d.radius;
+            const p = project3D(wx, -6, wz, cosY, sinY, cosX, sinX, metrics);
+            const depthFade = p.z < 0 ? 1 : Math.max(0.25, 1 - p.z / 320);
+            ctx.fillStyle = rgb(visual.ringColor, d.alpha * depthFade * 0.72);
+            ctx.beginPath();
+            ctx.arc(p.sx, p.sy, Math.max(0.7, d.size * p.scale), 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+        ctx.restore();
+
+        // 6. Project & Depth-Bucket Tree Particles + 3D Gift Boxes
+        // Bucketing allows back gift boxes to stay behind front pine needles while
+        // front gift boxes cleanly sit in front of deeper foliage!
+        const BUCKET_COUNT = 14;
+        const Z_MIN = -220;
+        const Z_MAX = 220;
+        const buckets = Array.from({ length: BUCKET_COUNT }, () => []);
+
+        for (let i = 0; i < treeParticles.length; i++) {
+          const pt = treeParticles[i];
+          const proj = project3D(pt.x, pt.y, pt.z, cosY, sinY, cosX, sinX, metrics);
+          const normZ = Math.max(0, Math.min(0.999, (Z_MAX - proj.z) / (Z_MAX - Z_MIN)));
+          const bIdx = Math.floor(normZ * BUCKET_COUNT);
+          buckets[bIdx].push({ pt, proj });
+        }
+
+        // Sort gift boxes back-to-front (largest z first)
+        const sortedBoxes = giftBoxes
+          .map((box) => {
+            const p = project3D(box.x, box.y, box.z, cosY, sinY, cosX, sinX, metrics);
+            return { box, z: p.z };
+          })
+          .sort((a, b) => b.z - a.z);
+
+        let boxCursor = 0;
+
+        for (let b = 0; b < BUCKET_COUNT; b++) {
+          // Z threshold for this bucket (moving from back +Z to front -Z)
+          const bucketFrontZ = Z_MAX - ((b + 1) / BUCKET_COUNT) * (Z_MAX - Z_MIN);
+
+          // Render any gift boxes whose depth falls into this slice
+          while (boxCursor < sortedBoxes.length && sortedBoxes[boxCursor].z >= bucketFrontZ) {
+            drawGiftBox3D(sortedBoxes[boxCursor].box, cosY, sinY, cosX, sinX, metrics);
+            boxCursor++;
+          }
+
+          const slice = buckets[b];
+          if (slice.length === 0) continue;
+
+          // Pass A: Volumetric Pine Foliage & Snow-Covered Branch Tips
+          ctx.globalCompositeOperation = 'source-over';
+          for (let j = 0; j < slice.length; j++) {
+            const { pt, proj } = slice[j];
+            if (pt.role === 'sparkle') continue;
+
+            const depthShade = proj.z < 0 ? 1.08 : Math.max(0.42, 1 - proj.z / 260);
+            const r = Math.max(0.85, pt.size * proj.scale);
+
+            if (pt.role === 'tip' && visual.tipAlpha > 0.05) {
+              // Blend foliage highlight with frosted snow tip color
+              const snowWeight = visual.tipAlpha * (0.65 + 0.35 * pt.shadeSeed);
+              const col = [
+                lerp(visual.foliageLight[0], visual.tipColor[0], snowWeight) * depthShade,
+                lerp(visual.foliageLight[1], visual.tipColor[1], snowWeight) * depthShade,
+                lerp(visual.foliageLight[2], visual.tipColor[2], snowWeight) * depthShade
+              ];
+              ctx.fillStyle = rgb(col, 0.92);
+            } else {
+              // Rich multi-toned pine needles (dark interior -> mid/light outer boughs)
+              const cBase = pt.radialMix < 0.52
+                ? visual.foliageDark
+                : pt.shadeSeed > 0.45
+                  ? visual.foliageMid
+                  : visual.foliageLight;
+              ctx.fillStyle = rgb([
+                cBase[0] * depthShade,
+                cBase[1] * depthShade,
+                cBase[2] * depthShade
+              ], 0.9);
+            }
+
+            ctx.beginPath();
+            ctx.arc(proj.sx, proj.sy, r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Pass B: Luminous Fairy-Light Sparkles (Additive Glow)
+          ctx.globalCompositeOperation = 'lighter';
+          for (let j = 0; j < slice.length; j++) {
+            const { pt, proj } = slice[j];
+            if (pt.role !== 'sparkle') continue;
+            if (proj.z > 65) continue; // Keep deep back sparkles subtle
+
+            const twinkle = 0.35 + 0.65 * Math.sin(time * pt.twinkleSpeed + pt.twinklePhase);
+            const col = pt.sparkleGroup === 0 ? visual.sparkleA : visual.sparkleB;
+            const r = Math.max(1.0, pt.size * proj.scale * (0.8 + 0.4 * twinkle));
+
+            ctx.fillStyle = rgb(col, twinkle * 0.85);
+            ctx.beginPath();
+            ctx.arc(proj.sx, proj.sy, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Soft bokeh halo on brighter fairy lights
+            if (twinkle > 0.78) {
+              ctx.fillStyle = rgb(col, (twinkle - 0.75) * 0.9);
+              ctx.beginPath();
+              ctx.arc(proj.sx, proj.sy, r * 2.5, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+
+        // Flush any remaining front-most gift boxes
+        while (boxCursor < sortedBoxes.length) {
+          drawGiftBox3D(sortedBoxes[boxCursor].box, cosY, sinY, cosX, sinX, metrics);
+          boxCursor++;
+        }
+
+        ctx.globalCompositeOperation = 'source-over';
+
+        // 7. Draw Continuous Spiral Light Ribbon(s) ("灯条式")
+        drawSpiralRibbon(
+          ribbonNodes,
+          time,
+          cosY,
+          sinY,
+          cosX,
+          sinX,
+          metrics,
+          visual.ribbonStrength,
+          false
+        );
+
+        if (visual.secondaryRibbon > 0.02) {
+          drawSpiralRibbon(
+            secondRibbonNodes,
+            time,
+            cosY,
+            sinY,
+            cosX,
+            sinX,
+            metrics,
+            visual.secondaryRibbon,
+            true
+          );
+        }
+
+        // 8. Draw Radiant 3D Star Topper at Apex
+        drawApexStar(time, cosY, sinY, cosX, sinX, metrics);
+
+        // 9. Draw Midground & Foreground Falling Snow
+        updateAndDrawSnow(time, 'mid');
+        updateAndDrawSnow(time, 'fg');
+
+        // 10. Draw Interactive Wish Sparkle Bursts
+        updateAndDrawWishBursts();
+
+        requestAnimationFrame(render);
+      }
+
+      // ========================================================================
+      // Responsive Canvas Sizing
+      // ========================================================================
+      function handleResize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      window.addEventListener('resize', handleResize);
+
+      // ========================================================================
+      // Pointer & Touch Interactivity (Spin, Tilt, Zoom, Wish Sparkle Burst)
+      // ========================================================================
+      function onPointerDown(x, y) {
+        camera.isDragging = true;
+        camera.lastX = x;
+        camera.lastY = y;
+        camera.dragDistance = 0;
+      }
+
+      function onPointerMove(x, y) {
+        if (!camera.isDragging) return;
+        const dx = x - camera.lastX;
+        const dy = y - camera.lastY;
+        camera.lastX = x;
+        camera.lastY = y;
+        camera.dragDistance += Math.hypot(dx, dy);
+
+        // Horizontal drag rotates 3D tree with velocity
+        camera.velY = dx * 0.0065;
+        camera.rotY += camera.velY;
+
+        // Vertical drag gently tilts camera pitch
+        camera.targetRotX = Math.max(-0.12, Math.min(0.42, camera.targetRotX + dy * 0.0022));
+      }
+
+      function onPointerUp(x, y) {
+        if (camera.isDragging && camera.dragDistance < 10) {
+          // Treat clean click/tap as a magical wish burst!
+          spawnWishBurst(x, y);
+        }
+        camera.isDragging = false;
+      }
+
+      // Mouse Events
+      canvas.addEventListener('mousedown', (e) => {
+        onPointerDown(e.clientX, e.clientY);
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        onPointerMove(e.clientX, e.clientY);
+      });
+
+      window.addEventListener('mouseup', (e) => {
+        if (camera.isDragging) {
+          onPointerUp(e.clientX, e.clientY);
+        }
+      });
+
+      // Wheel Zoom
+      canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = -Math.sign(e.deltaY) * 0.08;
+        camera.targetZoom = Math.max(0.72, Math.min(1.55, camera.targetZoom + delta));
+      }, { passive: false });
+
+      // Touch Events (Single-finger drag/tap + Two-finger pinch zoom)
+      canvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          onPointerDown(e.touches[0].clientX, e.touches[0].clientY);
+        } else if (e.touches.length === 2) {
+          camera.isDragging = false;
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          camera.pinchStartDist = Math.hypot(dx, dy);
+          camera.pinchStartZoom = camera.targetZoom;
+        }
+      }, { passive: true });
+
+      canvas.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1) {
+          onPointerMove(e.touches[0].clientX, e.touches[0].clientY);
+        } else if (e.touches.length === 2 && camera.pinchStartDist > 0) {
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          const dist = Math.hypot(dx, dy);
+          const ratio = dist / camera.pinchStartDist;
+          camera.targetZoom = Math.max(0.72, Math.min(1.55, camera.pinchStartZoom * ratio));
+        }
+      }, { passive: true });
+
+      canvas.addEventListener('touchend', (e) => {
+        if (e.changedTouches.length === 1 && camera.isDragging) {
+          onPointerUp(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        }
+        if (e.touches.length < 2) {
+          camera.pinchStartDist = 0;
+        }
+      });
+
+      // ========================================================================
+      // Mode Switching & UI Controls
+      // ========================================================================
+      function setThemeMode(modeKey) {
+        if (!THEMES[modeKey]) return;
+        currentThemeKey = modeKey;
+        document.body.setAttribute('data-theme', modeKey);
+
+        modeButtons.forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.mode === modeKey);
+        });
+
+        // Automatically ensure snow is visible when switching to "初雪覆松"
+        if (modeKey === 'snow' && !snowEnabled) {
+          snowEnabled = true;
+          snowToggleBtn.classList.add('is-active');
+        }
+
+        // Trigger a celebratory sparkle burst around the upper tree on mode switch
+        spawnWishBurst(width * 0.5, height * 0.36);
+      }
+
+      modeButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          setThemeMode(btn.dataset.mode);
+        });
+      });
+
+      // Snow Toggle Pill
+      snowToggleBtn.addEventListener('click', () => {
+        snowEnabled = !snowEnabled;
+        snowToggleBtn.classList.toggle('is-active', snowEnabled);
+      });
+
+      // Custom Blessing Modal Handlers
+      function openBlessingModal() {
+        inputTitle.value = elTitle.textContent;
+        inputCn.value = elCn.textContent;
+        inputSub.value = elSub.textContent;
+        blessingModal.classList.add('open');
+      }
+
+      function closeBlessingModal() {
+        blessingModal.classList.remove('open');
+      }
+
+      editBlessingBtn.addEventListener('click', openBlessingModal);
+      blessingTrigger.addEventListener('click', openBlessingModal);
+      closeModalBtn.addEventListener('click', closeBlessingModal);
+
+      blessingModal.addEventListener('click', (e) => {
+        if (e.target === blessingModal) closeBlessingModal();
+      });
+
+      saveBlessingBtn.addEventListener('click', () => {
+        const t = inputTitle.value.trim();
+        const c = inputCn.value.trim();
+        const s = inputSub.value.trim();
+        if (t) elTitle.textContent = t;
+        if (c) elCn.textContent = c;
+        if (s) elSub.textContent = s;
+        closeBlessingModal();
+        spawnWishBurst(width * 0.5, height * 0.72);
+      });
+
+      resetBlessingBtn.addEventListener('click', () => {
+        inputTitle.value = 'Merry Christmas';
+        inputCn.value = '愿所有美好，如期而至';
+        inputSub.value = '✦ MAY YOUR WISHES FIND THEIR LIGHT ✦';
+      });
+
+      // ========================================================================
+      // Initialize All 3D Scene Geometry & Start Render Loop
+      // ========================================================================
+      window.addEventListener('load', () => {
+        handleResize();
+        initTreeParticles();
+        initSpiralRibbons();
+        initGiftBoxes();
+        initGroundRings();
+        initBackgroundStars();
+        initSnowflakes();
+        requestAnimationFrame(render);
+      });
+    })();
+  </script>
+</body>
+</html>
